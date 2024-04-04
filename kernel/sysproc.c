@@ -48,6 +48,11 @@ sys_sbrk(void)
   return addr;
 }
 
+uint64 sys_getyear(void)
+{
+  return 2024;
+}
+
 uint64
 sys_sleep(void)
 {
