@@ -11,4 +11,13 @@ struct history_buffer
     uint64 lastCommandIndex;
     int numOfCommandsInMemory;
     int currentHistory;
+
+    uint64 IDsArr[MAX_HISTORY];
+    uint64 lastCommnadID;
+};
+
+struct history
+{
+    int historyId;
+    char command[INPUT_BUF_SIZE];
 };

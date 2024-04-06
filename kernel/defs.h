@@ -1,3 +1,4 @@
+#include "console.h"
 struct buf;
 struct context;
 struct file;
@@ -18,6 +19,7 @@ void            bpin(struct buf*);
 void            bunpin(struct buf*);
 
 // console.c
+int             gethistory(int historyid,struct history (*history)[INPUT_BUF_SIZE]);
 void            consoleinit(void);
 void            consoleintr(int);
 void            consputc(int);
