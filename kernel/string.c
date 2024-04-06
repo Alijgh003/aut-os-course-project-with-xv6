@@ -105,3 +105,22 @@ strlen(const char *s)
   return n;
 }
 
+int
+strstr(const char *s1, const char *s2)
+{
+  int result = 0;
+  int j= 0;
+  for(int i=0; i<strlen(s1);i++){
+    if(s1[i] == s2[j]){
+      j++;
+    }else{
+      j = 0;
+    }
+    if(j >= strlen(s2)){
+      result = 1;
+      break;
+    }
+  }
+  return result;
+}
+

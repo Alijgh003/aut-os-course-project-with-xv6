@@ -10,6 +10,7 @@
 //
 
 #include <stdarg.h>
+#include <stddef.h> 
 
 #include "types.h"
 #include "param.h"
@@ -21,6 +22,7 @@
 #include "riscv.h"
 #include "defs.h"
 #include "proc.h"
+#include "console.h"
 
 #define BACKSPACE 0x100
 #define C(x)  ((x)-'@')  // Control-x
@@ -45,12 +47,13 @@ struct {
   struct spinlock lock;
   
   // input
-#define INPUT_BUF_SIZE 128
   char buf[INPUT_BUF_SIZE];
   uint r;  // Read index
   uint w;  // Write index
   uint e;  // Edit index
 } cons;
+
+struct history_buffer history_buffer_array;
 
 //
 // user write()s to the console go here.
@@ -82,6 +85,7 @@ consoleread(int user_dst, uint64 dst, int n)
   uint target;
   int c;
   char cbuf;
+
 
   target = n;
   acquire(&cons.lock);
@@ -126,6 +130,42 @@ consoleread(int user_dst, uint64 dst, int n)
   return target - n;
 }
 
+
+
+void 
+getbufstr(char* c)
+{
+  char command[INPUT_BUF_SIZE]= "\0";
+  int counter = 0;
+  for(int i=cons.w;i<cons.e;i++){
+    int c  = cons.buf[(i) % INPUT_BUF_SIZE];
+    if(c == '\n'){
+      break;
+    }else{
+      command[counter] = c; 
+      counter++ ; 
+    }
+  }
+  strncpy(c, command,strlen(command));
+}
+
+void
+addcommand(){
+  char command[INPUT_BUF_SIZE] = "\0";
+  getbufstr(command);
+  int commandLen = strlen(command);
+  if(!strstr(command,"history")){
+    history_buffer_array.currentHistory = (history_buffer_array.numOfCommandsInMemory == 0) ? 0 : (history_buffer_array.lastCommandIndex + 1) % MAX_HISTORY;
+    history_buffer_array.numOfCommandsInMemory = (history_buffer_array.numOfCommandsInMemory < MAX_HISTORY) ? history_buffer_array.numOfCommandsInMemory+1 : MAX_HISTORY;
+    strncpy(history_buffer_array.bufferArr[history_buffer_array.currentHistory],"\0",history_buffer_array.lengthArr[history_buffer_array.currentHistory]+1);
+    history_buffer_array.lengthArr[history_buffer_array.currentHistory] = commandLen;
+    strncpy(history_buffer_array.bufferArr[history_buffer_array.currentHistory],command,commandLen);
+    history_buffer_array.lastCommandIndex = history_buffer_array.currentHistory;
+  }
+} 
+
+
+
 //
 // the console input interrupt handler.
 // uartintr() calls this for input character.
@@ -168,13 +208,13 @@ consoleintr(int c)
       if(c == '\n' || c == C('D') || cons.e-cons.r == INPUT_BUF_SIZE){
         // wake up consoleread() if a whole line (or end-of-file)
         // has arrived.
+        addcommand();
         cons.w = cons.e;
         wakeup(&cons.r);
       }
     }
     break;
   }
-  
   release(&cons.lock);
 }
 
