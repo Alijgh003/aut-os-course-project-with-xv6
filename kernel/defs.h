@@ -18,6 +18,7 @@ void            bpin(struct buf*);
 void            bunpin(struct buf*);
 
 // console.c
+void            printhistory(int index);
 void            consoleinit(void);
 void            consoleintr(int);
 void            consputc(int);
@@ -130,6 +131,7 @@ void*           memmove(void*, const void*, uint);
 void*           memset(void*, int, uint);
 char*           safestrcpy(char*, const char*, int);
 int             strlen(const char*);
+int             strstr(char*, char*);
 int             strncmp(const char*, const char*, uint);
 char*           strncpy(char*, const char*, int);
 

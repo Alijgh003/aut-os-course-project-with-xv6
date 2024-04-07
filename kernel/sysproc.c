@@ -94,3 +94,12 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+uint64
+sys_history(void)
+{
+  int index;
+  argint(0,&index);
+  printhistory(index);
+  return 0;
+}
