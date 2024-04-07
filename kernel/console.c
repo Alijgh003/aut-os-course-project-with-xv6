@@ -142,13 +142,13 @@ void
 printhistory(int index){
   if(history_buffer_array.numOfCommandsInMemory < 1){
     consputstr("history buffer is empty.\n");
-  }else if(index < 0 || index > history_buffer_array.numOfCommandsInMemory){
+  }else if(index < 0 || index >= history_buffer_array.numOfCommandsInMemory){
     consputstr("invalid history index.\n");
   }else{
     int currentIndex = history_buffer_array.currentHistory + 1;
     char* resultCommand = "\0";
     for(int i=0; i<history_buffer_array.numOfCommandsInMemory; i++){
-      consputstr(history_buffer_array.bufferArr[currentIndex]);
+      consputstr(history_buffer_array.bufferArr[currentIndex % history_buffer_array.numOfCommandsInMemory]);
       consputc('\n');
       if(i == index){
         resultCommand = history_buffer_array.bufferArr[i];
