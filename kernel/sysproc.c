@@ -107,6 +107,6 @@ sys_history(void)
 uint64
 sys_top(void)
 {
-  top();
+  gettop();
   return 0;
 }

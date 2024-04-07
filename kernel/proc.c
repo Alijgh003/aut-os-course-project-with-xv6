@@ -685,19 +685,30 @@ procdump(void)
 }
 
 void
-printtop()
+gettop()
 {
-  struct top top;
+  struct top ktop;
   struct proc *p;
+  struct top *usertop;
+  struct proc *myp = myproc();
+
+  argaddr(0,(uint64 *) &usertop);
 
   for(p = proc; p < &proc[NPROC]; p++){
     if(p->state == RUNNING){
-      top.running_processes++;
+      ktop.running_processes++;
     }else if(p->state == SLEEPING){
-      top.sleeping_processes++;
+      ktop.sleeping_processes++;
     }
-    top.total_processes++;
-    
+    ktop.proc_list[ktop.total_processes].pid = p->pid;
+    strncpy(ktop.proc_list[ktop.total_processes].name,p->name,strlen(p->name));
+    if(strncmp(p->name,"init",4)){
+      ktop.proc_list[ktop.total_processes].ppid = 0;
+    }else{
+      ktop.proc_list[ktop.total_processes].ppid = p->parent->pid;
+    }
+    ktop.total_processes++;
   }
+  copyout(myp->pagetable,(uint64) usertop,(char *) &ktop, sizeof(ktop));
   return;
 }

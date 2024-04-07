@@ -1,4 +1,5 @@
 struct stat;
+struct top;
 
 // system calls
 int fork(void);
@@ -24,7 +25,7 @@ int sleep(int);
 int uptime(void);
 int getyear(void);
 int history(int);
-int top(void);
+int top(struct top*);
 
 // ulib.c
 int stat(const char*, struct stat*);
