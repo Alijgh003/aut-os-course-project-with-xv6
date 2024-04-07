@@ -149,7 +149,7 @@ printhistory(int index){
     char* resultCommand = "\0";
     for(int i=0; i<history_buffer_array.numOfCommandsInMemory; i++){
       consputstr(history_buffer_array.bufferArr[currentIndex]);
-      consputcI("\n");
+      consputc('\n');
       if(i == index){
         resultCommand = history_buffer_array.bufferArr[i];
       }
@@ -157,7 +157,7 @@ printhistory(int index){
     }
     consputstr("the target command is= ");
     consputstr(resultCommand);
-    consputc("\n");
+    consputc('\n');
   }
 }
 

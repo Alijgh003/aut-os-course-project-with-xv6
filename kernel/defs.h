@@ -1,4 +1,3 @@
-#include "console.h"
 struct buf;
 struct context;
 struct file;
