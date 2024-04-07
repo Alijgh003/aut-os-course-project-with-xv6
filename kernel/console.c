@@ -142,11 +142,10 @@ void
 printhistory(int index){
   if(history_buffer_array.numOfCommandsInMemory < 1){
     consputstr("history buffer is empty.\n");
-  }else if(index < 0 || index >= history_buffer_array.numOfCommandsInMemory){
-    consputstr("invalid history index.\n");
   }else{
     int currentIndex = history_buffer_array.currentHistory + 1;
     char* resultCommand = "\0";
+    consputstr("commnads in history are:\n");
     for(int i=0; i<history_buffer_array.numOfCommandsInMemory; i++){
       consputstr(history_buffer_array.bufferArr[currentIndex % history_buffer_array.numOfCommandsInMemory]);
       consputc('\n');
@@ -155,9 +154,13 @@ printhistory(int index){
       }
       currentIndex++;
     }
-    consputstr("the target command is= ");
-    consputstr(resultCommand);
-    consputc('\n');
+    consputstr("the target command is:\n");
+    if(strncmp(resultCommand,"\0",strlen(resultCommand))){
+      consputstr(resultCommand);
+      consputc('\n');
+    }else{
+      consputstr("invalid index\n");
+    }
   }
 }
 

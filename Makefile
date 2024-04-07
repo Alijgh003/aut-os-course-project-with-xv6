@@ -134,6 +134,7 @@ UPROGS=\
 	$U/_zombie\
 	$U/_myfirstuserprogram\
 	$U/_getyear\
+	$U/_history\
 
 fs.img: mkfs/mkfs README $(UPROGS)
 	mkfs/mkfs fs.img README $(UPROGS)
