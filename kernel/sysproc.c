@@ -103,3 +103,10 @@ sys_history(void)
   printhistory(index);
   return 0;
 }
+
+uint64
+sys_top(void)
+{
+  top();
+  return 0;
+}

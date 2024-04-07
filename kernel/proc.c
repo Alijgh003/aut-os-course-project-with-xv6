@@ -7,6 +7,7 @@
 #include "defs.h"
 #include "console.h"
 
+
 struct cpu cpus[NCPU];
 
 struct proc proc[NPROC];
@@ -681,4 +682,22 @@ procdump(void)
     printf("%d %s %s", p->pid, state, p->name);
     printf("\n");
   }
+}
+
+void
+printtop()
+{
+  struct top top;
+  struct proc *p;
+
+  for(p = proc; p < &proc[NPROC]; p++){
+    if(p->state == RUNNING){
+      top.running_processes++;
+    }else if(p->state == SLEEPING){
+      top.sleeping_processes++;
+    }
+    top.total_processes++;
+    
+  }
+  return;
 }

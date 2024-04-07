@@ -38,3 +38,4 @@ entry("sleep");
 entry("uptime");
 entry("getyear");
 entry("history");
+entry("top");
