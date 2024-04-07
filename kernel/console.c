@@ -130,22 +130,35 @@ consoleread(int user_dst, uint64 dst, int n)
   return target - n;
 }
 
-int
-gethistory(int historyid, struct history (*history)[INPUT_BUF_SIZE]){
-  memset(history,'\0',sizeof(history));
-  if(historyid < history_buffer_array.lastCommnadID - history_buffer_array.numOfCommandsInMemory + 1 || historyid > history_buffer_array.lastCommnadID){
-    return -1;
+void
+consputstr(char *str)
+{
+  for(int i=0;i<strlen(str);i++){
+    consputc(str[i]);
   }
-  int numOfResults = history_buffer_array.lastCommnadID - historyid + 1; 
-  int currentIndex = history_buffer_array.currentHistory;
-  for(int i=0; i<numOfResults; i++){
-    strncpy(history[i]->command
-    ,history_buffer_array.bufferArr[currentIndex%history_buffer_array.numOfCommandsInMemory]
-    ,history_buffer_array.lengthArr[currentIndex%history_buffer_array.numOfCommandsInMemory]);
-    history[i]->historyId = history_buffer_array.IDsArr[currentIndex%history_buffer_array.numOfCommandsInMemory];
-    currentIndex++;
+}
+
+void
+printhistory(int index){
+  if(history_buffer_array.numOfCommandsInMemory < 1){
+    consputstr("history buffer is empty.\n");
+  }else if(index < 0 || index > history_buffer_array.numOfCommandsInMemory){
+    consputstr("invalid history index.\n");
+  }else{
+    int currentIndex = history_buffer_array.currentHistory + 1;
+    char* resultCommand = "\0";
+    for(int i=0; i<history_buffer_array.numOfCommandsInMemory; i++){
+      consputstr(history_buffer_array.bufferArr[currentIndex]);
+      consputcI("\n");
+      if(i == index){
+        resultCommand = history_buffer_array.bufferArr[i];
+      }
+      currentIndex++;
+    }
+    consputstr("the target command is= ");
+    consputstr(resultCommand);
+    consputc("\n");
   }
-  return 0;
 }
 
 void 
@@ -176,7 +189,6 @@ addcommand(){
     history_buffer_array.numOfCommandsInMemory = (history_buffer_array.numOfCommandsInMemory < MAX_HISTORY) ? history_buffer_array.numOfCommandsInMemory+1 : MAX_HISTORY;
     strncpy(history_buffer_array.bufferArr[history_buffer_array.currentHistory],"\0",history_buffer_array.lengthArr[history_buffer_array.currentHistory]+1);
     history_buffer_array.lengthArr[history_buffer_array.currentHistory] = commandLen;
-    history_buffer_array.IDsArr[history_buffer_array.currentHistory] = ++history_buffer_array.lastCommnadID;
     strncpy(history_buffer_array.bufferArr[history_buffer_array.currentHistory],command,commandLen);
     history_buffer_array.lastCommandIndex = history_buffer_array.currentHistory;
   }

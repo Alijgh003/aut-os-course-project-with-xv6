@@ -98,7 +98,8 @@ sys_uptime(void)
 uint64
 sys_history(void)
 {
-
-  
+  int index;
+  argint(0,&index);
+  printhistory(index);
   return 0;
 }

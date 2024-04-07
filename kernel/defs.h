@@ -19,7 +19,7 @@ void            bpin(struct buf*);
 void            bunpin(struct buf*);
 
 // console.c
-int             gethistory(int historyid,struct history (*history)[INPUT_BUF_SIZE]);
+void            printhistory(int index);
 void            consoleinit(void);
 void            consoleintr(int);
 void            consputc(int);
