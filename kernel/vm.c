@@ -356,8 +356,9 @@ copyout(pagetable_t pagetable, uint64 dstva, char *src, uint64 len)
   while(len > 0){
     va0 = PGROUNDDOWN(dstva);
     pa0 = walkaddr(pagetable, va0);
-    if(pa0 == 0)
+    if(pa0 == 0){
       return -1;
+    }
     n = PGSIZE - (dstva - va0);
     if(n > len)
       n = len;

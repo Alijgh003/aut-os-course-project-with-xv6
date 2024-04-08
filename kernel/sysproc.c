@@ -103,3 +103,12 @@ sys_history(void)
   printhistory(index);
   return 0;
 }
+
+uint64
+sys_top(void)
+{
+  uint64 useraddr;
+  argaddr(0,&useraddr);
+  gettop(useraddr);
+  return 0;
+}

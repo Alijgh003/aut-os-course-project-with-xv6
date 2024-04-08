@@ -22,6 +22,7 @@ void            printhistory(int index);
 void            consoleinit(void);
 void            consoleintr(int);
 void            consputc(int);
+void            consputstr(char*);
 
 // exec.c
 int             exec(char*, char**);
@@ -107,6 +108,7 @@ void            yield(void);
 int             either_copyout(int user_dst, uint64 dst, void *src, uint64 len);
 int             either_copyin(void *dst, int user_src, uint64 src, uint64 len);
 void            procdump(void);
+int            gettop(uint64);
 
 // swtch.S
 void            swtch(struct context*, struct context*);

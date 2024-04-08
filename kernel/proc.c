@@ -7,6 +7,7 @@
 #include "defs.h"
 #include "console.h"
 
+
 struct cpu cpus[NCPU];
 
 struct proc proc[NPROC];
@@ -681,4 +682,38 @@ procdump(void)
     printf("%d %s %s", p->pid, state, p->name);
     printf("\n");
   }
+}
+
+int
+gettop(uint64 useraddr)
+{
+  struct top ktop = {
+    .running_processes = 0,
+    .total_processes = 0,
+    .sleeping_processes = 0,
+    .uptime = ticks
+  };
+  struct proc *p;
+  struct proc *myp = myproc();
+
+  for(p = proc; p < &proc[NPROC]; p++){
+    if(p->pid == '\0'){
+      break;
+    }
+    if(p->state == RUNNING){
+      ktop.running_processes++;
+    }else if(p->state == SLEEPING){
+      ktop.sleeping_processes++;
+    }
+    ktop.proc_list[ktop.total_processes].pid = p->pid;
+    strncpy(ktop.proc_list[ktop.total_processes].name,p->name,strlen(p->name));
+    if(strncmp(p->name,"init",4)){
+      ktop.proc_list[ktop.total_processes].ppid = p->parent->pid;
+    }else{
+      ktop.proc_list[ktop.total_processes].ppid = 0;
+    }
+    ktop.proc_list[ktop.total_processes].state = p->state;
+    ktop.total_processes++;
+  }
+  return copyout(myp->pagetable,useraddr,(char *) &ktop, sizeof(ktop));
 }
