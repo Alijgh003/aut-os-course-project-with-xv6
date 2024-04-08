@@ -107,6 +107,8 @@ sys_history(void)
 uint64
 sys_top(void)
 {
-  gettop();
+  uint64 useraddr;
+  argaddr(0,&useraddr);
+  gettop(useraddr);
   return 0;
 }

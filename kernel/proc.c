@@ -684,17 +684,22 @@ procdump(void)
   }
 }
 
-void
-gettop()
+int
+gettop(uint64 useraddr)
 {
-  struct top ktop;
+  struct top ktop = {
+    .running_processes = 0,
+    .total_processes = 0,
+    .sleeping_processes = 0,
+    .uptime = ticks
+  };
   struct proc *p;
-  struct top *usertop;
   struct proc *myp = myproc();
 
-  argaddr(0,(uint64 *) &usertop);
-
   for(p = proc; p < &proc[NPROC]; p++){
+    if(p->pid == '\0'){
+      break;
+    }
     if(p->state == RUNNING){
       ktop.running_processes++;
     }else if(p->state == SLEEPING){
@@ -703,12 +708,12 @@ gettop()
     ktop.proc_list[ktop.total_processes].pid = p->pid;
     strncpy(ktop.proc_list[ktop.total_processes].name,p->name,strlen(p->name));
     if(strncmp(p->name,"init",4)){
-      ktop.proc_list[ktop.total_processes].ppid = 0;
-    }else{
       ktop.proc_list[ktop.total_processes].ppid = p->parent->pid;
+    }else{
+      ktop.proc_list[ktop.total_processes].ppid = 0;
     }
+    ktop.proc_list[ktop.total_processes].state = p->state;
     ktop.total_processes++;
   }
-  copyout(myp->pagetable,(uint64) usertop,(char *) &ktop, sizeof(ktop));
-  return;
+  return copyout(myp->pagetable,useraddr,(char *) &ktop, sizeof(ktop));
 }

@@ -2,6 +2,10 @@
   "files.associations": {
     "console.h": "c",
     "stat.h": "c",
-    "user.h": "c"
+    "user.h": "c",
+    "types.h": "c",
+    "top.h": "c",
+    "proc.h": "c",
+    "param.h": "c"
   }
 }
