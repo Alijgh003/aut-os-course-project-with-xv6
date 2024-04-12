@@ -155,14 +155,6 @@ consoleread(int user_dst, uint64 dst, int n)
   return target - n;
 }
 
-void
-consputstr(char *str)
-{
-  for(int i=0;i<strlen(str);i++){
-    consputc(str[i]);
-  }
-}
-
 
 void
 killline()
@@ -177,25 +169,23 @@ killline()
 void
 printhistory(int index){
   if(history_buffer_array.numOfCommandsInMemory < 1){
-    consputstr("history buffer is empty.\n");
+    printf("history buffer is empty.\n");
   }else{
     int currentIndex = history_buffer_array.currentHistory + 1;
     char* resultCommand = "\0";
-    consputstr("commnads in history are:\n");
+    printf("\n");
     for(int i=0; i<history_buffer_array.numOfCommandsInMemory; i++){
-      consputstr(history_buffer_array.bufferArr[currentIndex % history_buffer_array.numOfCommandsInMemory]);
-      consputc('\n');
-      if(i == index){
+      printf("%d) %s\n",i+1,history_buffer_array.bufferArr[currentIndex % history_buffer_array.numOfCommandsInMemory]);
+      if(i == index-1){
         resultCommand = history_buffer_array.bufferArr[i];
       }
       currentIndex++;
     }
-    consputstr("the target command is:\n");
+    printf("\nthe target command is:\n");
     if(strncmp(resultCommand,"\0",strlen(resultCommand))){
-      consputstr(resultCommand);
-      consputc('\n');
+      printf("%s\n",resultCommand);
     }else{
-      consputstr("invalid index\n");
+      printf("invalid index\n");
     }
   }
 }
@@ -254,7 +244,6 @@ showHistoryCursor()
 void
 upkeyhandler()
 {
-  //TODO
   showHistoryCursor();
   increaseHistoryCursor();
 }
@@ -262,7 +251,6 @@ upkeyhandler()
 void 
 downkeyhandler()
 {
-  //TODO
   decreaseHistoryCursor();
   showHistoryCursor();
 }

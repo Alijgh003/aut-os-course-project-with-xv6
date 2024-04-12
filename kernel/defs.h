@@ -22,7 +22,6 @@ void            printhistory(int index);
 void            consoleinit(void);
 void            consoleintr(int);
 void            consputc(int);
-void            consputstr(char*);
 
 // exec.c
 int             exec(char*, char**);
