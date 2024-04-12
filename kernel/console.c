@@ -27,6 +27,32 @@
 #define BACKSPACE 0x100
 #define C(x)  ((x)-'@')  // Control-x
 
+
+struct history_buffer history_buffer_array;
+
+int escdown = 0;
+int specialkeydown = 0;
+int historyCursor = 0;
+
+
+void
+increaseHistoryCursor()
+{
+  historyCursor = historyCursor == history_buffer_array.numOfCommandsInMemory-1? historyCursor : historyCursor+1;
+}
+
+void
+decreaseHistoryCursor()
+{
+  historyCursor = historyCursor <= 0 ? 0 : historyCursor-1;
+}
+
+void
+resetHistoryCursor()
+{
+  historyCursor = 0;
+}
+
 //
 // send one character to the uart.
 // called by printf(), and to echo input characters,
@@ -53,7 +79,6 @@ struct {
   uint e;  // Edit index
 } cons;
 
-struct history_buffer history_buffer_array;
 
 //
 // user write()s to the console go here.
@@ -138,6 +163,17 @@ consputstr(char *str)
   }
 }
 
+
+void
+killline()
+{
+  while(cons.e != cons.w &&
+          cons.buf[(cons.e-1) % INPUT_BUF_SIZE] != '\n'){
+      cons.e--;
+      consputc(BACKSPACE);
+    }
+}
+
 void
 printhistory(int index){
   if(history_buffer_array.numOfCommandsInMemory < 1){
@@ -197,6 +233,79 @@ addcommand(){
   }
 } 
 
+void 
+storeforconsumption(int c)
+{
+  // store for consumption by consoleread().
+  cons.buf[cons.e++ % INPUT_BUF_SIZE] = c;
+}
+
+void
+showHistoryCursor()
+{
+  killline();
+  char *command = history_buffer_array.bufferArr[(history_buffer_array.lastCommandIndex-historyCursor)%history_buffer_array.numOfCommandsInMemory];
+  for(int i=0;i<strlen(command);i++){
+    consputc(command[i]);
+    storeforconsumption(command[i]);
+  }
+}
+
+void
+upkeyhandler()
+{
+  //TODO
+  showHistoryCursor();
+  increaseHistoryCursor();
+}
+
+void 
+downkeyhandler()
+{
+  //TODO
+  decreaseHistoryCursor();
+  showHistoryCursor();
+}
+
+void
+specialkeyhandler(int c)
+{
+  switch (c)
+  {
+  case 'A':
+    upkeyhandler();
+    break;
+  
+  case 'B':
+    downkeyhandler();
+    break;
+
+  default:
+    break;
+  }
+}
+
+void
+defaultconsoleintrhandler(int c)
+{
+  resetHistoryCursor();
+  if(c != 0 && cons.e-cons.r < INPUT_BUF_SIZE){
+      c = (c == '\r') ? '\n' : c;
+      
+      // echo back to the user.
+      consputc(c);
+
+      storeforconsumption(c);
+
+      if(c == '\n' || c == C('D') || cons.e-cons.r == INPUT_BUF_SIZE){
+        // wake up consoleread() if a whole line (or end-of-file)
+        // has arrived.
+        addcommand();
+        cons.w = cons.e;
+        wakeup(&cons.r);
+      }
+    }
+}
 
 
 //
@@ -212,40 +321,47 @@ consoleintr(int c)
 
   switch(c){
   case C('P'):  // Print process list.
+    resetHistoryCursor();
     procdump();
     break;
   case C('U'):  // Kill line.
-    while(cons.e != cons.w &&
-          cons.buf[(cons.e-1) % INPUT_BUF_SIZE] != '\n'){
-      cons.e--;
-      consputc(BACKSPACE);
-    }
+    resetHistoryCursor();
+    killline();
     break;
   case C('H'): // Backspace
   case '\x7f': // Delete key
+    resetHistoryCursor();
     if(cons.e != cons.w){
       cons.e--;
       consputc(BACKSPACE);
     }
     break;
-  default:
-    if(c != 0 && cons.e-cons.r < INPUT_BUF_SIZE){
-      c = (c == '\r') ? '\n' : c;
 
-      // echo back to the user.
-      consputc(c);
+  case '\x1B': //Escape Key
+    escdown = 1;
+    break;
 
-      // store for consumption by consoleread().
-      cons.buf[cons.e++ % INPUT_BUF_SIZE] = c;
-
-      if(c == '\n' || c == C('D') || cons.e-cons.r == INPUT_BUF_SIZE){
-        // wake up consoleread() if a whole line (or end-of-file)
-        // has arrived.
-        addcommand();
-        cons.w = cons.e;
-        wakeup(&cons.r);
-      }
+  case '\x5B': // [ char
+    if(escdown){
+      escdown = 0;
+      specialkeydown = 1;
+    }else{
+      defaultconsoleintrhandler(c);
     }
+    break;
+  
+  case 'A':
+  case 'B':
+    if(specialkeydown){
+      specialkeydown = 0;
+      specialkeyhandler(c);
+    }else{
+      defaultconsoleintrhandler(c);
+    }
+    break;
+
+  default:
+    defaultconsoleintrhandler(c);
     break;
   }
   release(&cons.lock);
