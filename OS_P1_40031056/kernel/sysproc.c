@@ -109,5 +109,6 @@ sys_top(void)
 {
   uint64 useraddr;
   argaddr(0,&useraddr);
-  return gettop(useraddr);
+  gettop(useraddr);
+  return 0;
 }

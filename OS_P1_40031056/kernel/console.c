@@ -212,6 +212,7 @@ addcommand(){
   char command[INPUT_BUF_SIZE] = "\0";
   getbufstr(command);
   int commandLen = strlen(command);
+  //TODO: isValid to chekc validation of command;
   if(!strstr(command,"history")){
     history_buffer_array.currentHistory = (history_buffer_array.numOfCommandsInMemory == 0) ? 0 : (history_buffer_array.lastCommandIndex + 1) % MAX_HISTORY;
     history_buffer_array.numOfCommandsInMemory = (history_buffer_array.numOfCommandsInMemory < MAX_HISTORY) ? history_buffer_array.numOfCommandsInMemory+1 : MAX_HISTORY;
