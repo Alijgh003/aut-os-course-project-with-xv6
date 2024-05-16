@@ -126,6 +126,8 @@ allocproc(void)
 found:
   p->pid = allocpid();
   p->state = USED;
+  p->uptime_ticks = 0;
+  p->running_ticks = 0;
 
   // Allocate a trapframe page.
   if((p->trapframe = (struct trapframe *)kalloc()) == 0){
@@ -681,6 +683,22 @@ procdump(void)
       state = "???";
     printf("%d %s %s", p->pid, state, p->name);
     printf("\n");
+  }
+}
+
+void
+increase_processes_ticks()
+{
+  struct proc* p;
+  for(p = proc ; &proc[NPROC];p++){
+    if(p->state != UNUSED){
+      acquire(&p->lock);
+      p->uptime_ticks++;
+      if(p->state == RUNNING){
+        p->running_ticks++;
+      }
+      release(&p->lock);
+    }
   }
 }
 

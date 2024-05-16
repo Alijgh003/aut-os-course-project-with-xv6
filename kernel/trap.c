@@ -165,6 +165,8 @@ clockintr()
 {
   acquire(&tickslock);
   ticks++;
+  //increament of processes ticks num
+  increase_processes_ticks();
   wakeup(&ticks);
   release(&tickslock);
 }

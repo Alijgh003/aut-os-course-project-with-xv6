@@ -91,6 +91,9 @@ struct proc {
   int killed;                  // If non-zero, have been killed
   int xstate;                  // Exit status to be returned to parent's wait
   int pid;                     // Process ID
+  int uptime_ticks;            // Number of ticks after process creating
+  int running_ticks;           // Number of ticks after process running
+  
 
   // wait_lock must be held when using this:
   struct proc *parent;         // Parent process
@@ -110,6 +113,8 @@ struct proc_info {
     char name[16];
     int pid;
     int ppid;
+    long time;
+    int cpu;
     enum procstate state;
 };
 
