@@ -114,7 +114,7 @@ struct proc_info {
     int pid;
     int ppid;
     long time;
-    int cpu;
+    float cpu;
     enum procstate state;
 };
 

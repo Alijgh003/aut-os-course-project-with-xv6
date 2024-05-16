@@ -689,9 +689,10 @@ procdump(void)
 void
 increase_processes_ticks()
 {
-  struct proc* p;
-  for(p = proc ; &proc[NPROC];p++){
-    if(p->state != UNUSED){
+  struct proc *p;
+
+  for(p = proc; p < &proc[NPROC]; p++) {
+      if(p->state != UNUSED){
       acquire(&p->lock);
       p->uptime_ticks++;
       if(p->state == RUNNING){
@@ -709,7 +710,7 @@ gettop(uint64 useraddr)
     .running_processes = 0,
     .total_processes = 0,
     .sleeping_processes = 0,
-    .uptime = ticks
+    .uptime = ticks / 10
   };
   struct proc *p;
   struct proc *myp = myproc();
@@ -731,6 +732,9 @@ gettop(uint64 useraddr)
       ktop.proc_list[ktop.total_processes].ppid = 0;
     }
     ktop.proc_list[ktop.total_processes].state = p->state;
+    //adding time and cpu
+    ktop.proc_list[ktop.total_processes].time = (ticks - p->uptime_ticks) / 10;
+    ktop.proc_list[ktop.total_processes].cpu = (p->running_ticks / ticks)*100;
     ktop.total_processes++;
   }
   return copyout(myp->pagetable,useraddr,(char *) &ktop, sizeof(ktop));
