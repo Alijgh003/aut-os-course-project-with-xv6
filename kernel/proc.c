@@ -734,7 +734,7 @@ gettop(uint64 useraddr)
     ktop.proc_list[ktop.total_processes].state = p->state;
     //adding time and cpu
     ktop.proc_list[ktop.total_processes].time = (ticks - p->uptime_ticks) / 10;
-    ktop.proc_list[ktop.total_processes].cpu = (p->running_ticks / ticks)*100;
+    ktop.proc_list[ktop.total_processes].cpu = ( (double) p->running_ticks / ticks) *100;
     ktop.total_processes++;
   }
   return copyout(myp->pagetable,useraddr,(char *) &ktop, sizeof(ktop));

@@ -45,7 +45,7 @@ main(int argc,char *argv[])
         printf("NAME\tPID\tPARENT PID\tTIME\t%%CPU\tSTATUS\n");
         struct proc_info *pinfo = utop->proc_list;
         for(int i=0; i < utop->total_processes ;i++){
-            printf("%s\t%d\t%d\t\t%d\t%d\t%s\n",pinfo->name,pinfo->pid,pinfo->ppid,pinfo->time,pinfo->cpu,getState(pinfo->state));
+            printf("%s\t%d\t%d\t\t%d\t%f\t%s\n",pinfo->name,pinfo->pid,pinfo->ppid,pinfo->time,pinfo->cpu,getState(pinfo->state));
             pinfo++;
         }
     }

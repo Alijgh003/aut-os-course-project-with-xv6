@@ -98,7 +98,7 @@ printf(char *fmt, ...)
         s = "(null)";
       for(; *s; s++)
         consputc(*s);
-      break;
+      break;  
     case '%':
       consputc('%');
       break;
