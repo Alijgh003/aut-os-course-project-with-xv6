@@ -80,6 +80,13 @@ vprintf(int fd, const char *fmt, va_list ap)
           putc(fd, *s);
           s++;
         }
+      } else if(c == 'f'){
+        uint x;
+        x = va_arg(ap,double) * 200;
+        x = (x + 1) >> 1;
+        unsigned units = x/100;
+        unsigned frac = x - (units*100);
+        printf("%d.%d",units,frac); 
       } else if(c == 'c'){
         putc(fd, va_arg(ap, uint));
       } else if(c == '%'){

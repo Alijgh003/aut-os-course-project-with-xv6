@@ -136,6 +136,7 @@ UPROGS=\
 	$U/_getyear\
 	$U/_history\
 	$U/_top\
+	$U/_ttop\
 
 fs.img: mkfs/mkfs README $(UPROGS)
 	mkfs/mkfs fs.img README $(UPROGS)

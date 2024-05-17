@@ -63,6 +63,7 @@ strchr(const char *s, char c)
   return 0;
 }
 
+
 char*
 gets(char *buf, int max)
 {
