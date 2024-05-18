@@ -305,8 +305,11 @@ void
 consoleintr(int c)
 {
   acquire(&cons.lock);
-
+  int dofgproc = 0;
   switch(c){
+  case C('C'): // SIGINT with ctrl+c
+    dofgproc = 1;
+    break;
   case C('P'):  // Print process list.
     resetHistoryCursor();
     procdump();
@@ -352,6 +355,9 @@ consoleintr(int c)
     break;
   }
   release(&cons.lock);
+  if (dofgproc){
+    fgproc();
+  }
 }
 
 void
