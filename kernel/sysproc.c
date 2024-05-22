@@ -111,3 +111,9 @@ sys_top(void)
   argaddr(0,&useraddr);
   return gettop(useraddr);
 }
+
+uint64
+sys_fgproc(void)
+{
+  return fgproc();
+}

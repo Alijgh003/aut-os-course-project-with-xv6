@@ -23,3 +23,4 @@
 #define SYS_getyear 22
 #define SYS_history 23
 #define SYS_top     24
+#define SYS_fgproc 25

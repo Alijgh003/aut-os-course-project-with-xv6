@@ -39,3 +39,4 @@ entry("uptime");
 entry("getyear");
 entry("history");
 entry("top");
+entry("fgproc");

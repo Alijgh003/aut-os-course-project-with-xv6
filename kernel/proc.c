@@ -739,3 +739,23 @@ gettop(uint64 useraddr)
   }
   return copyout(myp->pagetable,useraddr,(char *) &ktop, sizeof(ktop));
 }
+
+/*
+  we access the process table ptable for pid access of
+  every running process. Meanwhile we lock the process table to prevent
+  any changes during interrupt handling. We iterate over the elements in
+  the process table ptable and once we find our running process, we kill
+  that process (which is the functionality for SIGINT)
+*/
+int fgproc(void){
+  struct proc *p;
+  for(p = proc; p < &proc[NPROC]; p++){
+    if(p != initproc && p->pid != 2){
+      printf("\nSIGINT\n");
+      p->killed=1;
+      kill(p->pid);
+      break;
+    }
+  }
+  return 25;
+}

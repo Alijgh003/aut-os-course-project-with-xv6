@@ -26,6 +26,7 @@ int uptime(void);
 int getyear(void);
 int history(int);
 int top(struct top*);
+int fgproc(void);
 
 // ulib.c
 int stat(const char*, struct stat*);
