@@ -1,0 +1,162 @@
+اسکجولر ابتدایی و پیش فرض خود xv6 میاد به ترتیب روی پراسس ها جرکت میکنه و با وقوع تایمر اینتراپت متوقف میشه و سی پی یو رو پس میگیره میره بعدی. 
+با توجه به این الگوریتم پیش فرض زمان بندی آن Round-Robin است.
+
+
+// Per-CPU process scheduler.
+// Each CPU calls scheduler() after setting itself up.
+// Scheduler never returns.  It loops, doing:
+//  - choose a process to run.
+//  - swtch to start running that process.
+//  - eventually that process transfers control
+//    via swtch back to the scheduler.
+void
+scheduler(void)
+{
+  struct proc *p; اشاره گر از جنس پراسس
+  struct cpu *c = mycpu(); اشاره گر به سی پی یو مورد نظرمون
+  
+  c->proc = 0;
+  for(;;){
+    // Avoid deadlock by ensuring that devices can interrupt.
+    intr_on();	اینتراپت گیری را فعال می کند
+
+    for(p = proc; p < &proc[NPROC]; p++) { این اشاره گر پراسس روی تمام پراسس های موجود حرکت می کند
+      acquire(&p->lock);  میاد اینتراپت رو می بنده با تست اند ست قفل رو فعال می کنه
+      if(p->state == RUNNABLE) { 
+        // Switch to chosen process.  It is the process's job
+        // to release its lock and then reacquire it
+        // before jumping back to us.
+        p->state = RUNNING; استیت پراسس رو بذار روی رانینگ
+        c->proc = p; و بیا پراسسی که سی پی یو روش مشغوله رو مشخص کن 
+        swtch(&c->context, &p->context); محتوای قدیمی را در کانتکست سی پی یو میریزد و سپس 
+
+        // Process is done running for now.
+        // It should have changed its p->state before coming back.
+        c->proc = 0; پراسس قعلی سی پی یو را به حالت اولیه برمیگردانیم
+      }
+      release(&p->lock); قفل رو باز می کنه
+    }
+  }
+}
+
+
+// Switch to scheduler.  Must hold only p->lock
+// and have changed proc->state. Saves and restores
+// intena because intena is a property of this
+// kernel thread, not this CPU. It should
+// be proc->intena and proc->noff, but that would
+// break in the few places where a lock is held but
+// there's no process.
+void
+sched(void) میاد برمیگرده به اسکجولر
+{
+  int intena; 
+  struct proc *p = myproc();
+ 
+
+  if(!holding(&p->lock)) 
+    panic("sched p->lock");        اگر همچنان قفله دستش نبود
+  if(mycpu()->noff != 1)
+    panic("sched locks");			و اگر 
+  if(p->state == RUNNING)
+    panic("sched running");	و اگر رو حالت رانینگ نبود همچنان
+  if(intr_get())
+    panic("sched interruptible");	و اگر اینتراپت های سیستم فعال نبود
+
+  intena = mycpu()->intena; درونصورت بیا اینتنا رو نگه دار
+  swtch(&p->context, &mycpu()->context); و کانتسکت سوییچ کن به کانتکس قبلی که برگردی رو اسکجولر این همون کانتکستیه که ذخیره کرده بودی تو اسکجولر
+  mycpu()->intena = intena;
+}
+
+
+// Give up the CPU for one scheduling round. 
+void
+yield(void) میاد میگه که تسکی که روشی رو ییلد کن متوقف کن که برگردی روی اسکجولینگ
+{
+  struct proc *p = myproc(); 
+  acquire(&p->lock); اینجوری که اول قفل میکنه
+  p->state = RUNNABLE;  بعد میاد میگه که رانیبلش کن 
+  sched(); و بعد این عملیات سوییچ شدن رو اسکجولر
+  release(&p->lock); و در نهایتم که آزاد سازی قفل
+}
+
+
+
+trap.c
+timer interrupt
+
+usertrap  اگر تایمر اینتراپت باشه که ییلد میکنه و سی پی یو رو میده میره
+  // give up the CPU if this is a timer interrupt.
+  if(which_dev == 2)
+    yield();
+    
+kerneltrap به طور مشابه
+     // give up the CPU if this is a timer interrupt.
+  if(which_dev == 2 && myproc() != 0 && myproc()->state == RUNNING)
+    yield();
+   
+// check if it's an external interrupt or software interrupt,
+// and handle it.
+// returns 2 if timer interrupt,
+// 1 if other device,
+// 0 if not recognized.
+int
+devintr() هر دوی اون بالایی ها کد اینراپت رو ازین میگیرن که اگه ۲ بود یعنی تایمره
+
+    // the PLIC allows each device to raise at most one
+    // interrupt at a time; tell the PLIC the device is
+    // now allowed to interrupt again.
+    if(irq)
+      plic_complete(irq);
+
+    return 1;
+  } else if(scause == 0x8000000000000001L){ نحوه ی شناسایی تایمر اینتراپت
+    // software interrupt from a machine-mode timer interrupt,
+    // forwarded by timervec in kernelvec.S.
+
+    if(cpuid() == 0){
+      clockintr();
+    }
+    
+    // acknowledge the software interrupt by clearing
+    // the SSIP bit in sip.
+    w_sip(r_sip() & ~2);
+
+    return 2;
+  } 
+   
+  srart.c ایجاد تایمر اینتراپت
+// arrange to receive timer interrupts.
+// they will arrive in machine mode at
+// at timervec in kernelvec.S,
+// which turns them into software interrupts for
+// devintr() in trap.c.
+void
+timerinit()
+{
+  // each CPU has a separate source of timer interrupts.
+  int id = r_mhartid();
+
+  // ask the CLINT for a timer interrupt.
+  int interval = 1000000; // cycles; about 1/10th second in qemu.
+  *(uint64*)CLINT_MTIMECMP(id) = *(uint64*)CLINT_MTIME + interval;
+
+  // prepare information in scratch[] for timervec.
+  // scratch[0..2] : space for timervec to save registers.
+  // scratch[3] : address of CLINT MTIMECMP register.
+  // scratch[4] : desired interval (in cycles) between timer interrupts.
+  uint64 *scratch = &timer_scratch[id][0];
+  scratch[3] = CLINT_MTIMECMP(id);
+  scratch[4] = interval;
+  w_mscratch((uint64)scratch);
+
+  // set the machine-mode trap handler.
+  w_mtvec((uint64)timervec);
+
+  // enable machine-mode interrupts.
+  w_mstatus(r_mstatus() | MSTATUS_MIE);
+
+  // enable machine-mode timer interrupts.
+  w_mie(r_mie() | MIE_MTIE);
+}
+
