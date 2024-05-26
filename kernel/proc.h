@@ -1,3 +1,6 @@
+#define MAX_PRIORITY  3
+
+
 // Saved registers for kernel context switches.
 struct context {
   uint64 ra;
@@ -18,12 +21,14 @@ struct context {
   uint64 s11;
 };
 
+
 // Per-CPU state.
 struct cpu {
   struct proc *proc;          // The process running on this cpu, or null.
   struct context context;     // swtch() here to enter scheduler().
   int noff;                   // Depth of push_off() nesting.
   int intena;                 // Were interrupts enabled before push_off()?
+
 };
 
 extern struct cpu cpus[NCPU];
@@ -79,6 +84,8 @@ struct trapframe {
   /* 280 */ uint64 t6;
 };
 
+
+
 enum procstate { UNUSED, USED, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
 
 // Per-process state
@@ -93,6 +100,8 @@ struct proc {
   int pid;                     // Process ID
   int uptime_ticks;            // Number of ticks after process creating
   int running_ticks;           // Number of ticks after process running
+  int running_ticks_by_priority[MAX_PRIORITY];
+  int priority;
   
 
   // wait_lock must be held when using this:
@@ -124,4 +133,9 @@ struct top {
   int running_processes;
   int sleeping_processes;
   struct proc_info proc_list[NPROC];
+};
+
+struct new_process_signal{
+  struct spinlock lock;
+  int signal;
 };

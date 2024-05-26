@@ -14,8 +14,14 @@ struct proc proc[NPROC];
 
 struct proc *initproc;
 
+struct new_process_signal new_process_signal = {
+  .signal = 0
+};
+
 int nextpid = 1;
 struct spinlock pid_lock;
+
+const int sched_policy = 1;
 
 extern void forkret(void);
 static void freeproc(struct proc *p);
@@ -128,6 +134,13 @@ found:
   p->state = USED;
   p->uptime_ticks = 0;
   p->running_ticks = 0;
+  for(int i=0;i<MAX_PRIORITY;i++){
+    p->running_ticks_by_priority[i] = 0;
+  }
+  p->priority = 1;
+  acquire(&new_process_signal.lock);
+  new_process_signal.signal++;
+  release(&new_process_signal.lock);
 
   // Allocate a trapframe page.
   if((p->trapframe = (struct trapframe *)kalloc()) == 0){
@@ -326,6 +339,12 @@ fork(void)
   np->state = RUNNABLE;
   release(&np->lock);
 
+  //invoke sched in preemptive algorithm.
+  acquire(&p->lock);
+  p->state = RUNNABLE;
+  sched();  
+  release(&p->lock);
+
   return pid;
 }
 
@@ -445,8 +464,8 @@ wait(uint64 addr)
 //  - swtch to start running that process.
 //  - eventually that process transfers control
 //    via swtch back to the scheduler.
-void
-scheduler(void)
+_Noreturn void
+round_robin_scheduler()
 {
   struct proc *p;
   struct cpu *c = mycpu();
@@ -472,6 +491,92 @@ scheduler(void)
       }
       release(&p->lock);
     }
+  }
+}
+
+int
+priority_to_quantom(int priority)
+{
+  switch (priority)
+  {
+  case 1:
+    return 5;
+  case 2:
+    return 10;
+  default:
+    return 20;
+  }
+}
+
+_Noreturn void
+MLQS() 
+{
+  struct proc *p;
+  struct proc* cursors[MAX_PRIORITY];
+  for(int i=0;i<MAX_PRIORITY;i++){
+      cursors[i]=proc;
+  }
+  struct cpu *c = mycpu();
+  
+  int qlevel = 1;
+  c->proc = 0;
+  outer: 
+    for(;;){
+      int find = 0;
+      // Avoid deadlock by ensuring that devices can interrupt.
+      intr_on();
+      for(p = cursors[qlevel-1]; p< &proc[NPROC];p++){
+        cursors[qlevel-1] = p;
+        acquire(&p->lock);
+        if(p->state == RUNNABLE && p->priority == qlevel){
+          if(strstr(p->name,"test_MLQS")){
+            printf("test process with id=%d and name=%s has been scheduled.\npriority=%d\n",p->pid,p->name,p->priority);
+          }
+          while(!(p->running_ticks_by_priority[p->priority] % priority_to_quantom(p->priority) == 0
+            && p->running_ticks_by_priority[p->priority] != 0) && p->state != ZOMBIE){
+            acquire(&new_process_signal.lock);
+            if(new_process_signal.signal > 0 && p->priority != 1){
+              new_process_signal.signal--;
+              qlevel = 1;
+              release(&new_process_signal.lock);
+              release(&p->lock);
+              goto outer;
+            }
+            release(&new_process_signal.lock);
+            p->state = RUNNING;
+            c->proc = p;
+            swtch(&c->context,&p->context);
+            c->proc = 0;
+          }
+          find++;
+          p->priority = p->priority >= MAX_PRIORITY ? MAX_PRIORITY : p->priority+1;
+          if(strstr(p->name,"test_MLQS")){
+            printf("test process with id=%d and name=%s has been brought out.\npriority=%d\n",p->pid,p->name,p->priority);
+          }
+        }
+        release(&p->lock);
+      }
+      cursors[qlevel-1] = proc;
+      if(!find){
+        qlevel = qlevel >= MAX_PRIORITY ? 1 : qlevel+1;
+      }    
+    }
+}
+
+
+void
+scheduler(void)
+{
+  switch (sched_policy)
+  {
+  case 1: // multilevel queue scheduler
+  {
+    MLQS();
+    break;
+  }
+  default:
+    round_robin_scheduler();
+    break;
   }
 }
 
@@ -697,6 +802,7 @@ increase_processes_ticks()
       p->uptime_ticks++;
       if(p->state == RUNNING){
         p->running_ticks++;
+        p->running_ticks_by_priority[p->priority]++;
       }
       release(&p->lock);
     }
