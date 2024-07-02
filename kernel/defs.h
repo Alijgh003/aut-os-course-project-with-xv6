@@ -109,7 +109,7 @@ int             either_copyin(void *dst, int user_src, uint64 src, uint64 len);
 void            procdump(void);
 int             gettop(uint64);
 void            increase_processes_ticks(void);
-int             fgproc(void);
+int             sigint(void);
 
 // swtch.S
 void            swtch(struct context*, struct context*);

@@ -132,8 +132,10 @@ allocproc(void)
 found:
   p->pid = allocpid();
   p->state = USED;
+
   p->uptime_ticks = 0;
   p->running_ticks = 0;
+  
   for(int i=0;i<MAX_PRIORITY;i++){
     p->running_ticks_by_priority[i] = 0;
   }
@@ -659,6 +661,7 @@ sleep(void *chan, struct spinlock *lk)
   // Go to sleep.
   p->chan = chan;
   p->state = SLEEPING;
+  
 
   sched();
 
@@ -853,13 +856,12 @@ gettop(uint64 useraddr)
   the process table ptable and once we find our running process, we kill
   that process (which is the functionality for SIGINT)
 */
-int fgproc(void){
+int sigint(void){
   struct proc *p;
   for(p = proc; p < &proc[NPROC]; p++){
     if(p != initproc && p->pid != 2){
       printf("\nSIGINT\n");
-      p->killed=1;
-      kill(p->pid);
+      setkilled(p);
       break;
     }
   }

@@ -104,7 +104,7 @@ extern uint64 sys_close(void);
 extern uint64 sys_getyear(void);
 extern uint64 sys_history(void);
 extern uint64 sys_top(void);
-extern uint64 sys_fgproc(void);
+extern uint64 sys_sigint(void);
 
 
 // An array mapping syscall numbers from syscall.h
@@ -134,7 +134,7 @@ static uint64 (*syscalls[])(void) = {
 [SYS_getyear] sys_getyear,
 [SYS_history] sys_history,
 [SYS_top]     sys_top,
-[SYS_fgproc]  sys_fgproc,
+[SYS_sigint]  sys_sigint,
 };
 
 void

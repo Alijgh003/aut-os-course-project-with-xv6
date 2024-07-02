@@ -14,7 +14,7 @@ sub entry {
     print " ecall\n";
     print " ret\n";
 }
-	
+
 entry("fork");
 entry("exit");
 entry("wait");
@@ -39,4 +39,4 @@ entry("uptime");
 entry("getyear");
 entry("history");
 entry("top");
-entry("fgproc");
+entry("sigint");

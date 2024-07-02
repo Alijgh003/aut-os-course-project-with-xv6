@@ -113,7 +113,7 @@ sys_top(void)
 }
 
 uint64
-sys_fgproc(void)
+sys_sigint(void)
 {
-  return fgproc();
+  return sigint();
 }

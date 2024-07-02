@@ -98,8 +98,10 @@ struct proc {
   int killed;                  // If non-zero, have been killed
   int xstate;                  // Exit status to be returned to parent's wait
   int pid;                     // Process ID
+
   int uptime_ticks;            // Number of ticks after process creating
   int running_ticks;           // Number of ticks after process running
+  
   int running_ticks_by_priority[MAX_PRIORITY];
   int priority;
   
