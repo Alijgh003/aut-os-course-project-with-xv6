@@ -5,6 +5,8 @@
 #include "riscv.h"
 #include "defs.h"
 #include "fs.h"
+#include "spinlock.h"
+#include "proc.h"
 
 /*
  * the kernel's page table.
@@ -147,14 +149,16 @@ mappages(pagetable_t pagetable, uint64 va, uint64 size, uint64 pa, int perm)
 
   if(size == 0)
     panic("mappages: size");
+
   
   a = PGROUNDDOWN(va);
   last = PGROUNDDOWN(va + size - 1);
   for(;;){
     if((pte = walk(pagetable, a, 1)) == 0)
       return -1;
-    if(*pte & PTE_V)
+    if(*pte & PTE_V){
       panic("mappages: remap");
+    }
     *pte = PA2PTE(pa) | perm | PTE_V;
     if(a == last)
       break;
@@ -308,20 +312,21 @@ uvmcopy(pagetable_t old, pagetable_t new, uint64 sz)
   pte_t *pte;
   uint64 pa, i;
   uint flags;
-  char *mem;
 
   for(i = 0; i < sz; i += PGSIZE){
     if((pte = walk(old, i, 0)) == 0)
       panic("uvmcopy: pte should exist");
     if((*pte & PTE_V) == 0)
       panic("uvmcopy: page not present");
+
+    *pte &=  ~PTE_W;
+    *pte |=  PTE_COW;
     pa = PTE2PA(*pte);
     flags = PTE_FLAGS(*pte);
-    if((mem = kalloc()) == 0)
-      goto err;
-    memmove(mem, (char*)pa, PGSIZE);
-    if(mappages(new, i, PGSIZE, (uint64)mem, flags) != 0){
-      kfree(mem);
+    //PHASE3: increase page refs;
+    increase_kref((void *)pa);
+    if(mappages(new, i, PGSIZE, pa, flags) != 0){
+      decrease_kref((void *)pa);
       goto err;
     }
   }
@@ -330,6 +335,42 @@ uvmcopy(pagetable_t old, pagetable_t new, uint64 sz)
  err:
   uvmunmap(new, 0, i / PGSIZE, 1);
   return -1;
+}
+
+//PHASE3: page_fault_handler
+int
+cow_page_fault_handler()
+{
+  struct proc *p = myproc(); 
+  uint64 pa;
+  pte_t *pte;
+  char *mem; 
+  uint64 va; 
+
+  if((mem = kalloc()) == 0)
+      panic("page_fault_handler cannot kalloc");
+
+  va = PGROUNDDOWN(r_stval());
+  if((pte = walk(p->pagetable,va , 0)) == 0)
+      panic("page_fault_handler: pte should exist");
+
+  if(va >= MAXVA || pte ==0 || (*pte & PTE_U) == 0 || (*pte & PTE_V) == 0 || (*pte & PTE_COW) == 0)
+  { 
+    myproc()->killed = 1;
+    printf("Error in COW_handle_pgfault: Illegal (virtual) addr on cpu %d address 0x%x, killing proc %s id (pid) %d\n", cpuid(), va, myproc()->name, myproc()->pid);
+    return 0;
+  }
+
+  pa = PTE2PA(*pte);
+  
+  memmove(mem, (char*) pa , PGSIZE);
+
+  *pte = PA2PTE(mem) | PTE_U | PTE_V | PTE_R |PTE_W | PTE_X ;
+  *pte &= ~PTE_COW;
+  
+  kfree((void *) pa);
+
+  return 1;
 }
 
 // mark a PTE invalid for user access.

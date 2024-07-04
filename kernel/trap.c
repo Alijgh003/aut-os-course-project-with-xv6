@@ -49,8 +49,8 @@ usertrap(void)
   
   // save user program counter.
   p->trapframe->epc = r_sepc();
-  
-  if(r_scause() == 8){
+  uint64 scause = r_scause();
+  if(scause == 8){
     // system call
 
     if(killed(p))
@@ -65,6 +65,11 @@ usertrap(void)
     intr_on();
 
     syscall();
+  } else if(scause == 15){
+    //page fault
+    if(cow_page_fault_handler() < 0){
+      panic("trap: page_fault_handler");
+    }
   } else if((which_dev = devintr()) != 0){
     // ok
   } else {

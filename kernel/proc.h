@@ -126,6 +126,7 @@ struct proc_info {
     int ppid;
     long time;
     double cpu;
+    double memory;
     enum procstate state;
 };
 
@@ -134,6 +135,8 @@ struct top {
   int total_processes;
   int running_processes;
   int sleeping_processes;
+  long total_memory;
+  long free_memory;
   struct proc_info proc_list[NPROC];
 };
 

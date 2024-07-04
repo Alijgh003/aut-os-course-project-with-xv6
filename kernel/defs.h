@@ -61,9 +61,15 @@ void            ramdiskintr(void);
 void            ramdiskrw(struct buf*);
 
 // kalloc.c
+void            increase_kref(void *pa);
+void            decrease_kref(void *pa);
+void            set_kref(void *pa,int n);
+int             get_num_of_pages(void *pa);
 void*           kalloc(void);
 void            kfree(void *);
 void            kinit(void);
+uint64          get_free_mem(void);
+
 
 // log.c
 void            initlog(int, struct superblock*);
@@ -178,6 +184,7 @@ uint64          walkaddr(pagetable_t, uint64);
 int             copyout(pagetable_t, uint64, char *, uint64);
 int             copyin(pagetable_t, char *, uint64, uint64);
 int             copyinstr(pagetable_t, char *, uint64, uint64);
+int            cow_page_fault_handler(void);
 
 // plic.c
 void            plicinit(void);

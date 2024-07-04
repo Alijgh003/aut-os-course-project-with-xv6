@@ -137,6 +137,7 @@ UPROGS=\
 	$U/_history\
 	$U/_top\
 	$U/_test_MLQS\
+	$U/_mt\
 
 fs.img: mkfs/mkfs README $(UPROGS)
 	mkfs/mkfs fs.img README $(UPROGS)

@@ -1,11 +1,13 @@
 enum procstate { UNUSED, USED, SLEEPING, RUNNABLE, RUNNING, ZOMBIE };
 
+
 struct proc_info {
     char name[16];
     int pid;
     int ppid;
     long time;
     double cpu;
+    double memory;
     enum procstate state;
 };
 
@@ -14,6 +16,8 @@ struct top {
   int total_processes;
   int running_processes;
   int sleeping_processes;
+  long total_memory;
+  long free_memory;
   struct proc_info proc_list[64];
 };
 
@@ -59,11 +63,13 @@ print_top()
         printf("#total_processes: %d\n",utop->total_processes);
         printf("#running_processes: %d\n",utop->running_processes);
         printf("#sleeping_processes: %d\n",utop->sleeping_processes);
+        printf("#total_memory: %l\n",utop->total_memory);
+        printf("#free_memory: %l\n",utop->free_memory);
         printf("\n");
-        printf("NAME\tPID\tPPID\tTIME\t%%CPU\tSTATUS\n");
+        printf("NAME\tPID\tPPID\tTIME\t%%CPU\t%%RAM\t\tSTATUS\n");
         struct proc_info *pinfo = utop->proc_list;
         for(int i=0; i < utop->total_processes ;i++){
-            printf("%s\t%d\t%d\t%d\t%f\t%s\n",pinfo->name,pinfo->pid,pinfo->ppid,pinfo->time,pinfo->cpu,getState(pinfo->state));
+            printf("%s\t%d\t%d\t%d\t%f\t%f\t\t%s\n",pinfo->name,pinfo->pid,pinfo->ppid,pinfo->time,pinfo->cpu,pinfo->memory,getState(pinfo->state));
             pinfo++;
         }
         printf("\n");

@@ -1,3 +1,4 @@
+#include "kalloc.h"
 #include "types.h"
 #include "param.h"
 #include "memlayout.h"
@@ -819,13 +820,15 @@ gettop(uint64 useraddr)
     .running_processes = 0,
     .total_processes = 0,
     .sleeping_processes = 0,
+    .free_memory =0,
+    .total_memory = total_memory,
     .uptime = ticks / 10
   };
   struct proc *p;
   struct proc *myp = myproc();
 
   for(p = proc; p < &proc[NPROC]; p++){
-    if(p->pid == '\0'){
+    if(p->state == UNUSED){
       break;
     }
     if(p->state == RUNNING){
@@ -844,8 +847,10 @@ gettop(uint64 useraddr)
     //adding time and cpu
     ktop.proc_list[ktop.total_processes].time = (ticks - p->uptime_ticks) / 10;
     ktop.proc_list[ktop.total_processes].cpu = ( (double) p->running_ticks / ticks) *100;
+    ktop.proc_list[ktop.total_processes].memory = ((double) p->sz / ktop.total_memory) * 100;
     ktop.total_processes++;
   }
+  ktop.free_memory = get_free_mem();
   return copyout(myp->pagetable,useraddr,(char *) &ktop, sizeof(ktop));
 }
 
